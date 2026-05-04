@@ -50,4 +50,18 @@ public class AudioPlayer {
             clip = null;
         }
     }
+
+    public void pause() {
+        if (clip != null && clip.isRunning()) {
+            clip.stop(); // stop() halts playback without resetting position
+            System.out.println("[AudioPlayer] Playback paused.");
+        }
+    }
+
+    public void resume() {
+        if (clip != null && !clip.isRunning()) {
+            clip.start(); // start() resumes from the current frame position
+            System.out.println("[AudioPlayer] Playback resumed.");
+        }
+    }
 }

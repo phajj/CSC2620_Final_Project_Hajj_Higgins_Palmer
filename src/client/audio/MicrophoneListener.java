@@ -243,6 +243,21 @@ public class MicrophoneListener {
     }
     System.out.println("[Server] " + response);
 
+    String upperCommand = command.trim().toUpperCase();
+    if (response.equals("OK") && audioPlayer != null) {
+      switch (upperCommand) {
+        case "STOP":
+          audioPlayer.stop();
+          break;
+        case "PAUSE":
+          audioPlayer.pause();
+          break;
+        case "RESUME":
+          audioPlayer.resume();
+          break;
+      }
+    }
+
     if (response.startsWith("PLAY:")) {
       String fileSizeHeader = serverConnection.readLine();
       if (fileSizeHeader == null || !fileSizeHeader.startsWith("FILE_SIZE:")) {
