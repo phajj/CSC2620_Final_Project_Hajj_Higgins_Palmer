@@ -107,7 +107,7 @@ public class CommandInterpreter implements CommandExpression {
         currentUser = null;
         return "OK";
       default:
-        return songNameExpression.interpret(cmd);
+        return songNameExpression.interpret(trimmed);
     }
   }
 }

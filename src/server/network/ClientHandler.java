@@ -43,6 +43,9 @@ public class ClientHandler implements Runnable {
         }
         if (resp.startsWith("PLAY:")) {
           String filePath = resp.substring("PLAY:".length()).trim();
+          out.write(resp);
+          out.write("\n");
+          out.flush();
           new FileSender(socket, filePath).start();
           continue;
         }
