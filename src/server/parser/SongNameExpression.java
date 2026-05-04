@@ -17,12 +17,12 @@ public class SongNameExpression implements CommandExpression {
   public String interpret(String context) {
     String songName = "";
     if (context.toLowerCase().startsWith("play ")) {
-      songName = context.replaceFirst("play ", "").strip(); // Strip command to get song name
+      songName = context.substring(5).strip(); // Strip command to get song name
     }
 
     try {
       Song song = library.findByTitle(songName); // If no error is thrown the song exists
-      return "PLAY:" + songName;
+      return "PLAY:" + song.getSong().getPath();
     } catch (Exception e) {
       return "ERROR: Unknown Song";
     }

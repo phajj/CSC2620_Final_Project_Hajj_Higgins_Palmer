@@ -1,5 +1,6 @@
 package client.audio;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -14,14 +15,29 @@ public class AudioPlayer {
 
     public void play(byte[] audioData) {
         stop(); // stop any current playback before starting a new one
+        System.out.println("[AudioPlayer] Received " + audioData.length + " bytes, attempting playback.");
         try {
-            AudioInputStream ais = AudioSystem.getAudioInputStream(
+            AudioInputStream mp3Stream = AudioSystem.getAudioInputStream(
                     new ByteArrayInputStream(audioData));
+            AudioFormat baseFormat = mp3Stream.getFormat();
+            System.out.println("[AudioPlayer] Decoded base format: " + baseFormat);
+            AudioFormat pcmFormat = new AudioFormat(
+                    AudioFormat.Encoding.PCM_SIGNED,
+                    baseFormat.getSampleRate(),
+                    16,
+                    baseFormat.getChannels(),
+                    baseFormat.getChannels() * 2,
+                    baseFormat.getSampleRate(),
+                    false);
+            AudioInputStream pcmStream = AudioSystem.getAudioInputStream(pcmFormat, mp3Stream);
             clip = AudioSystem.getClip();
-            clip.open(ais);
+            clip.open(pcmStream);
+            System.out.println("[AudioPlayer] Clip loaded, duration: " + clip.getMicrosecondLength() / 1_000_000.0 + "s");
             clip.start();
+            System.out.println("[AudioPlayer] Playback started.");
         } catch (Exception e) {
-            // Unsupported format or audio system unavailable
+            System.err.println("[AudioPlayer] Playback error: " + e);
+            e.printStackTrace();
         }
     }
 
@@ -32,6 +48,20 @@ public class AudioPlayer {
             }
             clip.close();
             clip = null;
+        }
+    }
+
+    public void pause() {
+        if (clip != null && clip.isRunning()) {
+            clip.stop(); // stop() halts playback without resetting position
+            System.out.println("[AudioPlayer] Playback paused.");
+        }
+    }
+
+    public void resume() {
+        if (clip != null && !clip.isRunning()) {
+            clip.start(); // start() resumes from the current frame position
+            System.out.println("[AudioPlayer] Playback resumed.");
         }
     }
 }

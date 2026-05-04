@@ -38,3 +38,5 @@ src/SpeechDemo.java
 .settings
 .classpath
 .project
+
+src/server/resources
