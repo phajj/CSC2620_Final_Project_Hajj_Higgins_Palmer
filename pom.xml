@@ -57,6 +57,13 @@
             <artifactId>vosk</artifactId>
             <version>0.3.45</version>
         </dependency>
+
+        <!-- MP3 support for javax.sound.sampled -->
+        <dependency>
+            <groupId>com.googlecode.soundlibs</groupId>
+            <artifactId>mp3spi</artifactId>
+            <version>1.9.5.4</version>
+        </dependency>
     </dependencies>
 
 </project>
