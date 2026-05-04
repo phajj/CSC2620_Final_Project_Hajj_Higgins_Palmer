@@ -22,7 +22,7 @@ public class KeywordSetupScreen {
 	public static final Pattern KEYWORD_PATTERN = Pattern.compile("^[A-Za-z0-9 ]{1,32}$");
 
 	public KeywordSetupScreen() {
-		this(new ServerConnection("localhost", 5555), null, null, false);
+		this(new ServerConnection(LoginScreen.DEFAULT_HOST, LoginScreen.DEFAULT_PORT), null, null, false);
 	}
 
 	public KeywordSetupScreen(ServerConnection conn) {

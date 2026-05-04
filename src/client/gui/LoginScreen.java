@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 public class LoginScreen {
 
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 5555;
+    public static final String DEFAULT_HOST = "localhost";
+    public static final int DEFAULT_PORT = 5555;
 
     private JFrame frame;
     private JTextField usernameField;
