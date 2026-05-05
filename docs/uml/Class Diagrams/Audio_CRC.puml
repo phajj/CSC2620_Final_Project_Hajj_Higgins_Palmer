@@ -1,0 +1,79 @@
+@startuml Audio_CRC
+
+title Audio Class Diagram\nsrc/client/audio
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle Bold
+
+'  Classes
+class AudioPlayer {
+    - clip : Clip
+    ==
+    + AudioPlayer()
+    + play(audioData : byte[]) : void
+    + stop() : void
+    + pause() : void
+    + resume() : void
+}
+
+class KeywordDetector {
+    - keyword : String
+    - recordingListener : RecordingListener
+    - recordingMode : boolean
+    ==
+    + KeywordDetector(keyword : String)
+    + KeywordDetector(credentials : UserCredentials)
+    + setRecordingListener(listener : RecordingListener) : void
+    + detect(transcript : String) : boolean
+    + getKeyword() : String
+    + isRecordingMode() : boolean
+    + resetRecordingMode() : void
+}
+
+
+class MicrophoneListener {
+    - {static} SAMPLE_RATE : float
+    - {static} BUFFER_SIZE : int
+    - {static} SILENCE_MS : long
+    - modelPath : String
+    - keywordDetector : KeywordDetector
+    - commandListener : CommandListener
+    - serverConnection : ServerConnection
+    - audioPlayer : AudioPlayer
+    - running : boolean
+    - recordingMode : boolean
+    - commandBuffer : StringBuilder
+    ==
+    + MicrophoneListener()
+    + MicrophoneListener(modelPath : String)
+    + MicrophoneListener(modelPath : String, keywordDetector : KeywordDetector)
+    + setCommandListener(listener : CommandListener) : void
+    + setServerConnection(conn : ServerConnection) : void
+    + setAudioPlayer(player : AudioPlayer) : void
+    + startListening() : void
+    + stopListening() : void
+    - listen() : void
+    - handleTranscript(transcript : String) : void
+    - finalizeCommand() : void
+    - sendToServer(command : String) : void
+}
+
+'  External Dependencies
+class ServerConnection <<network>> {
+    + sendCommand(cmd : String) : String
+    + readLine() : String
+    + receiveAudioData(size : long) : byte[]
+}
+
+class UserCredentials <<shared>> {
+    + getKeyword() : String
+}
+
+
+'  Relationships
+MicrophoneListener "1" o--> "1"    KeywordDetector  : keywordDetector
+MicrophoneListener "1" o--> "0..1" AudioPlayer      : audioPlayer
+MicrophoneListener "1" o--> "0..1" ServerConnection : serverConnection
+KeywordDetector ..> UserCredentials : <<reads keyword>>
+
+@enduml

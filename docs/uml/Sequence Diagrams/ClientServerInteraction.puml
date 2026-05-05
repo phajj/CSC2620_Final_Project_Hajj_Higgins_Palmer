@@ -1,0 +1,65 @@
+@startuml ClientServerInteraction
+
+title Voice Command — Client-Server Interaction
+
+participant "MicrophoneListener" as ML
+participant "ServerConnection" as SC
+participant "ClientHandler" as CH
+participant "CommandInterpreter" as CI
+participant "SongNameExpression" as SNE
+participant "SongLibrary" as SL
+participant "FileSender" as FS
+participant "AudioPlayer" as AP
+
+== Send Command to Server ==
+
+ML -> SC : sendCommand(command)
+SC -> SC : connect() if not already connected\n(Socket to host:port, timeout 2 s)
+SC -> CH : write command + "\\n"\nflush
+CH -> CI : interpret(command)
+
+== Server: Parse and Route ==
+
+CI -> CI : parse cmd token (e.g. "PLAY")
+CI -> SNE : interpret(command)
+SNE -> SNE : strip "play " prefix → songName
+SNE -> SL : findByTitle(songName)
+
+alt song found
+    SL --> SNE : Song object
+    SNE --> CI : "PLAY:<songname>"
+    CI --> CH : "PLAY:<songname>"
+    CH -> CH : response.startsWith("PLAY:") → true
+    CH -> FS : new FileSender(socket, filePath).start()
+    note right of CH : ClientHandler does NOT write\nthe "PLAY:" line to the client;\nFileSender takes over the socket
+
+    == File Transfer ==
+
+    FS -> FS : open File(filePath)
+    FS -> SC : write "FILE_SIZE:<n>\\n"
+    FS -> SC : stream raw audio bytes (n bytes)
+
+    SC --> ML : sendCommand() returns "PLAY:<songname>"
+    ML -> SC : readLine()
+    SC --> ML : "FILE_SIZE:<n>"
+    ML -> ML : parse size n
+    ML -> SC : receiveAudioData(n)
+    SC -> SC : DataInputStream.readFully(n bytes)
+    SC --> ML : byte[] audioData
+
+    ML -> AP : play(audioData)
+    AP -> AP : stop() — close any current Clip
+    AP -> AP : AudioSystem.getAudioInputStream(ByteArrayInputStream)
+    AP -> AP : clip = AudioSystem.getClip()\nclip.open(ais)\nclip.start()
+    note right of AP : audio plays back to user
+
+else song not found
+    SL --> SNE : throws Exception
+    SNE --> CI : "ERROR: Unknown Song"
+    CI --> CH : "ERROR: Unknown Song"
+    CH -> SC : write "ERROR: Unknown Song\\n"\nflush
+    SC --> ML : sendCommand() returns "ERROR: Unknown Song"
+    ML -> ML : print [Server] ERROR: Unknown Song to console
+end
+
+@enduml

@@ -1,0 +1,36 @@
+@startuml UseCase
+left to right direction
+
+actor "User" as U
+
+
+rectangle "Authentication" {
+    usecase "Register" as UC0
+    usecase "Login" as UC1
+    usecase "Logout" as UC2
+    usecase "Change Password" as UC3
+    usecase "Delete Account" as UC4
+    usecase "Configure Keyword" as UC5
+}
+
+rectangle "Voice Command" {
+    usecase "Play ..." as UC6
+    usecase "Stop" as UC7
+    usecase "Pause" as UC8
+    usecase "Resume" as UC9
+}
+
+U --> UC0
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC5
+
+U --> UC6
+U --> UC7
+U --> UC8
+U --> UC9
+
+
+@enduml

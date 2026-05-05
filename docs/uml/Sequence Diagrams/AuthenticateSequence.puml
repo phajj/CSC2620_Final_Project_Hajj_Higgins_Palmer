@@ -1,0 +1,60 @@
+@startuml AuthenticateSequence
+
+title Authentication Sequence
+
+actor Client
+participant "ClientHandler" as CH
+participant "CommandInterpreter" as CI
+participant "UserStore" as US
+participant "PasswordUtil" as PU
+database "userstore.txt" as FS
+
+== LOGIN ==
+
+Client -> CH : "LOGIN <username> <password>"
+CH -> CI : interpret(username, password)
+CI -> US : authenticateExistingUser(username, password)
+
+alt username not found
+    US --> CI : false
+    CI --> CH : "ERROR: invalid credentials"
+    CH --> Client : "ERROR: invalid credentials"
+else username found
+    US -> PU : verifyPassword(password, storedHash)
+    PU --> US : boolean match
+
+    alt password mismatch
+        US --> CI : false
+        CI --> CH : "ERROR: invalid credentials"
+        CH --> Client : "ERROR: invalid credentials"
+    else password matches
+        US --> CI : true
+        CI -> CI : currentUser = username
+        CI --> CH : "OK"
+        CH --> Client : "OK"
+    end
+end
+
+== REGISTER ==
+
+Client -> CH : "REGISTER <username> <password>"
+CH -> CI : interpret(username, password)
+CI -> US : createUser(username, password)
+
+alt username already exists
+    US --> CI : false
+    CI --> CH : "ERROR: user exists"
+    CH --> Client : "ERROR: user exists"
+else username is new
+    US -> PU : hashPassword(password)
+    PU --> US : hashedPassword
+    US -> US : passwordMap.put(username, hashedPassword)
+    US -> US : keywordMap.put(username, "")
+    US -> FS : persist()
+    FS --> US : success
+    US --> CI : true
+    CI --> CH : "OK"
+    CH --> Client : "OK"
+end
+
+@enduml
