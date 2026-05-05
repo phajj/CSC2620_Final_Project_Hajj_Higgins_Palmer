@@ -1,0 +1,23 @@
+@startuml Keyword Detection
+
+title Keyword Detection
+
+actor User
+participant "Microphone" as MIC
+participant "Vosk" as V
+participant "MicrophoneListener" as ML
+participant "KeywordDetector" as KD
+
+== Keyword Detection ==
+
+MIC -> ML : utterance complete
+ML -> V : acceptWaveForm(buffer)
+V --> ML : full transcript
+ML -> KD : detect(transcript)
+KD --> ML : keyword found
+ML -> ML : enter recording mode clear commandBuffer
+alt words follow keyword
+    ML -> ML : append remainder to commandBuffer
+end
+
+@enduml
