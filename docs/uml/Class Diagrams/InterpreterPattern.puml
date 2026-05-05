@@ -1,0 +1,70 @@
+@startuml Parser_CRC
+
+title Interpreter Design Pattern
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle Bold
+skinparam linetype ortho
+skinparam noteBackgroundColor #FFFDE7
+skinparam noteBorderColor #F9A825
+
+
+interface CommandExpression <<AbstractExpression>> {
+    + interpret(context : String) : String
+}
+
+note top of CommandExpression
+  Defines the single grammar rule
+  for the Interpreter pattern.
+end note
+
+class CommandInterpreter <<ConcreteExpression>> {
+    - store : UserStore
+    - songNameExpression : SongNameExpression
+    - currentUser : String
+    ==
+    + CommandInterpreter(store : UserStore)
+    + interpret(rawCommand : String) : String
+}
+
+note right of CommandInterpreter
+  Interprets auth & control commands:
+  LOGIN, REGISTER, SET_KEYWORD,
+  GET_KEYWORD, CHANGE_PASSWORD,
+  DELETE_ACCOUNT, LOGOUT,
+  PING, 
+  
+  STOP, PAUSE, RESUME.
+
+  Unknown input --> SongNameExpression.interpret()
+end note
+
+class SongNameExpression <<ConcreteExpression>> {
+    - library : SongLibrary
+    ==
+    + SongNameExpression()
+    + interpret(context : String) : String
+}
+
+note right of SongNameExpression
+  Interprets playback commands:
+  "PLAY <title>"
+  Returns "PLAY:<path>"
+       or "ERROR: Unknown Song"
+end note
+
+note as Context
+  <b>Context</b>
+  A raw command String passed to
+  interpret() carries all state
+  needed for evaluation:
+    "LOGIN Peter"
+    "PLAY Never Gonna Give You Up"
+end note
+
+'Relationships
+CommandInterpreter ..|> CommandExpression : implements
+SongNameExpression ..|> CommandExpression : implements
+CommandInterpreter --> "1" SongNameExpression : delegates unknown\ncommands to
+
+@enduml
