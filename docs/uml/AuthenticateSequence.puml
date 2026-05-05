@@ -12,9 +12,8 @@ database "userstore.txt" as FS
 == LOGIN ==
 
 Client -> CH : "LOGIN <username> <password>"
-CH -> CI : interpret("LOGIN <username> <password>")
+CH -> CI : interpret(username, password)
 CI -> US : authenticateExistingUser(username, password)
-US -> US : passwordMap.containsKey(username)
 
 alt username not found
     US --> CI : false
@@ -22,9 +21,6 @@ alt username not found
     CH --> Client : "ERROR: invalid credentials"
 else username found
     US -> PU : verifyPassword(password, storedHash)
-    PU -> PU : parse storedHash → (iterations, salt, expected)
-    PU -> PU : pbkdf2(password, salt, iterations)
-    PU -> PU : constant-time compare(actual, expected)
     PU --> US : boolean match
 
     alt password mismatch
@@ -42,9 +38,8 @@ end
 == REGISTER ==
 
 Client -> CH : "REGISTER <username> <password>"
-CH -> CI : interpret("REGISTER <username> <password>")
+CH -> CI : interpret(username, password)
 CI -> US : createUser(username, password)
-US -> US : passwordMap.containsKey(username)
 
 alt username already exists
     US --> CI : false
@@ -52,13 +47,10 @@ alt username already exists
     CH --> Client : "ERROR: user exists"
 else username is new
     US -> PU : hashPassword(password)
-    PU -> PU : SecureRandom → salt (16 bytes)
-    PU -> PU : pbkdf2(password, salt, 65536, 256)
-    PU -> PU : encode → "65536:<salt_b64>:<hash_b64>"
     PU --> US : hashedPassword
     US -> US : passwordMap.put(username, hashedPassword)
     US -> US : keywordMap.put(username, "")
-    US -> FS : persist() — write all users to temp file\nthen atomic move to userstore.txt
+    US -> FS : persist()
     FS --> US : success
     US --> CI : true
     CI --> CH : "OK"
