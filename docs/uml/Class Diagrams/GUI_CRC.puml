@@ -1,0 +1,129 @@
+@startuml GUI_CRC
+
+title GUI Class Diagram\nclient.gui package
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle Bold
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+' ─────────────────────────────────────────────
+'  GUI Classes
+' ─────────────────────────────────────────────
+
+class LoginScreen {
+    + {static} DEFAULT_HOST : String
+    + {static} DEFAULT_PORT : int
+    - {static} USERNAME_PATTERN : Pattern
+    - {static} PASSWORD_PATTERN : Pattern
+    - frame : JFrame
+    - usernameField : JTextField
+    - passwordField : JPasswordField
+    - messageLabel : JLabel
+    - connStatusLabel : JLabel
+    - serverConn : ServerConnection
+    ==
+    + LoginScreen()
+    + display() : void
+    + {static} main(args : String[]) : void
+    - initUI() : void
+    - validateInputs() : boolean
+    - onSubmit() : void
+    - openRegisterDialog() : void
+    - openKeywordSetup() : void
+    - attemptConnect() : void
+    - updateConnStatus(connected : boolean) : void
+}
+
+class MainScreen {
+    - {static} MODEL_PATH : String
+    - frame : JFrame
+    - statusLabel : JLabel
+    - serverConn : ServerConnection
+    - username : String
+    - initialMessage : String
+    - mic : MicrophoneListener
+    ==
+    + MainScreen()
+    + MainScreen(serverConn : ServerConnection, username : String)
+    + MainScreen(serverConn : ServerConnection, username : String, initialMessage : String)
+    + display() : void
+    + updateStatus(status : String) : void
+    - initUI() : void
+    - startSpeechListener() : void
+    - performLogout() : void
+    - attemptReconnect() : void
+    - openChangePasswordDialog() : void
+    - confirmAndDeleteAccount() : void
+}
+
+class KeywordSetupScreen {
+    + {static} KEYWORD_PATTERN : Pattern
+    - frame : JFrame
+    - keywordField : JTextField
+    - messageLabel : JLabel
+    - hintLabel : JLabel
+    - keyword : String
+    - serverConn : ServerConnection
+    - username : String
+    - initialKeyword : String
+    - redirectToMain : boolean
+    ==
+    + KeywordSetupScreen()
+    + KeywordSetupScreen(conn : ServerConnection)
+    + KeywordSetupScreen(conn : ServerConnection, username : String)
+    + KeywordSetupScreen(conn : ServerConnection, username : String,\n  initialKeyword : String, redirectToMain : boolean)
+    + display() : void
+    + getKeyword() : String
+    + setKeyword(keyword : String) : void
+    - initUI() : void
+    - onSave() : void
+}
+
+' ─────────────────────────────────────────────
+'  External Dependencies (referenced, not defined here)
+' ─────────────────────────────────────────────
+
+class ServerConnection <<network>> {
+    + connect() : boolean
+    + disconnect() : void
+    + sendCommand(cmd : String) : String
+}
+
+class MicrophoneListener <<audio>> {
+    + startListening() : void
+    + stopListening() : void
+    + setCommandListener(...) : void
+    + setServerConnection(...) : void
+    + setAudioPlayer(...) : void
+}
+
+class KeywordDetector <<audio>> {
+    + KeywordDetector(keyword : String)
+}
+
+class AudioPlayer <<audio>> {
+}
+
+' ─────────────────────────────────────────────
+'  Associations — fields that hold a reference
+' ─────────────────────────────────────────────
+
+LoginScreen       "1" o--> "1"   ServerConnection   : serverConn
+MainScreen        "1" o--> "1"   ServerConnection   : serverConn
+MainScreen        "1" o--> "0..1" MicrophoneListener : mic
+KeywordSetupScreen "1" o--> "1"  ServerConnection   : serverConn
+
+' ─────────────────────────────────────────────
+'  Dependencies — creates or navigates to
+' ─────────────────────────────────────────────
+
+LoginScreen       ..> MainScreen          : <<creates on login>>
+LoginScreen       ..> KeywordSetupScreen  : <<creates for setup>>
+MainScreen        ..> LoginScreen         : <<creates on logout>>
+MainScreen        ..> KeywordDetector     : <<creates>>
+MainScreen        ..> AudioPlayer         : <<creates>>
+KeywordSetupScreen ..> LoginScreen        : <<creates on back>>
+KeywordSetupScreen ..> MainScreen         : <<creates when redirectToMain>>
+
+@enduml
