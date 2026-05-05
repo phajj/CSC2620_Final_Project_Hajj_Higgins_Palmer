@@ -1,17 +1,25 @@
 package client.gui;
 
+import client.audio.AudioPlayer;
+import client.audio.KeywordDetector;
+import client.audio.MicrophoneListener;
 import client.network.ServerConnection;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MainScreen {
+
+    private static final String MODEL_PATH = "model";
 
     private JFrame frame;
     private JLabel statusLabel;
     private final ServerConnection serverConn;
     private final String username;
     private String initialMessage;
+    private MicrophoneListener mic;
 
     public MainScreen(ServerConnection serverConn, String username) {
         this(serverConn, username, null);
@@ -30,7 +38,15 @@ public class MainScreen {
 
     private void initUI() {
         frame = new JFrame("Main Screen");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (mic != null) mic.stopListening();
+                frame.dispose();
+                System.exit(0);
+            }
+        });
         frame.setSize(480, 240);
         frame.setLocationRelativeTo(null);
 
@@ -73,15 +89,44 @@ public class MainScreen {
                 JOptionPane.showMessageDialog(frame, initialMessage, "Info", JOptionPane.INFORMATION_MESSAGE);
             }
         });
+        new Thread(() -> startSpeechListener()).start();
     }
 
     public void updateStatus(String status) {
         SwingUtilities.invokeLater(() -> statusLabel.setText(status));
     }
 
+    private void startSpeechListener() {
+        if (serverConn == null) return;
+
+        String resp = serverConn.sendCommand("GET_KEYWORD");
+        if (resp == null || resp.equalsIgnoreCase("NONE") || !resp.toUpperCase().startsWith("KEYWORD ")) {
+            updateStatus("No keyword set. Use \"Setup Keywords\" to enable voice commands.");
+            return;
+        }
+
+        String keyword = resp.substring("KEYWORD ".length()).trim();
+        if (keyword.isEmpty()) {
+            updateStatus("No keyword set. Use \"Setup Keywords\" to enable voice commands.");
+            return;
+        }
+
+        KeywordDetector detector = new KeywordDetector(keyword);
+        mic = new MicrophoneListener(MODEL_PATH, detector);
+        mic.setCommandListener((command) -> updateStatus("[Command] " + command));
+        mic.setServerConnection(serverConn);
+        mic.setAudioPlayer(new AudioPlayer());
+        mic.startListening();
+        updateStatus("Listening for: \"" + keyword + "\"");
+    }
+
     private void performLogout() {
         // Run logout/cleanup off the EDT
         new Thread(() -> {
+            if (mic != null) {
+                mic.stopListening();
+                mic = null;
+            }
             if (serverConn != null) {
                 try {
                     serverConn.sendCommand("LOGOUT");

@@ -13,16 +13,13 @@ import java.net.Socket;
 public class ClientHandler implements Runnable {
 
   private final Socket socket;
-  private final UserStore store;
 
   private BufferedReader in;
   private BufferedWriter out;
-  private String currentUser = null;
   private CommandInterpreter interpreter;
 
   public ClientHandler(Socket socket, UserStore store) {
     this.socket = socket;
-    this.store = store;
     this.interpreter = new CommandInterpreter(store);
   }
 
@@ -43,6 +40,9 @@ public class ClientHandler implements Runnable {
         }
         if (resp.startsWith("PLAY:")) {
           String filePath = resp.substring("PLAY:".length()).trim();
+          out.write(resp);
+          out.write("\n");
+          out.flush();
           new FileSender(socket, filePath).start();
           continue;
         }

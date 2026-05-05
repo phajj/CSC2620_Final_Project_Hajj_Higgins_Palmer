@@ -1,5 +1,6 @@
 package server.library;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,11 +13,33 @@ import java.util.List;
  * @author Jackson Higgins
  */
 public class SongLibrary {
+  private static final String RESOURCES_PATH = "src/server/resources";
   private static SongLibrary instance;
   private static ArrayList<Song> songs;
 
   private SongLibrary() {
     this.songs = new ArrayList<>();
+    loadSongsFromResources();
+  }
+
+  /**
+   * Scans the resources folder and loads all MP3 files as Song objects
+   */
+  private void loadSongsFromResources() {
+    File resourcesDir = new File(RESOURCES_PATH);
+    if (!resourcesDir.exists() || !resourcesDir.isDirectory()) {
+      return;
+    }
+    File[] mp3Files = resourcesDir.listFiles(
+        (dir, name) -> name.toLowerCase().endsWith(".mp3"));
+    if (mp3Files == null) {
+      return;
+    }
+    for (File file : mp3Files) {
+      String name = file.getName();
+      String songName = name.substring(0, name.length() - 4);
+      songs.add(new Song(songName, file));
+    }
   }
 
   /**

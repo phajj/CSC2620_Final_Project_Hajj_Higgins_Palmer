@@ -1,7 +1,6 @@
 package server.parser;
 
 import server.auth.UserStore;
-import server.library.Song;
 
 /**
  * This class handles the logic from commands sent by the client.
@@ -106,8 +105,14 @@ public class CommandInterpreter implements CommandExpression {
       case "LOGOUT":
         currentUser = null;
         return "OK";
+      case "STOP":
+        return "OK";
+      case "PAUSE":
+        return "OK";
+      case "RESUME":
+        return "OK";
       default:
-        return songNameExpression.interpret(cmd);
+        return songNameExpression.interpret(trimmed);
     }
   }
 }
